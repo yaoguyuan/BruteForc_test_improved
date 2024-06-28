@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+	<meta charset="UTF-8">
+	<title>暴力破解测试页面</title>
+</head>
+<body>
+    <div>
+		<h1 align="center">暴力破解测试页面-难度high</h1>
+		<form action="response.php" method="post" onsubmit="return judge();" name="form">
+			
+			<script src="tripledes.js"></script>
+			<script src="mode-ecb.js"></script>
+			<script type="text/javascript">
+			function encryptByDES(message, key) {
+				var keyHex = CryptoJS.enc.Utf8.parse(key);
+				var encrypted = CryptoJS.DES.encrypt(message, keyHex, {
+					mode: CryptoJS.mode.ECB,
+					padding: CryptoJS.pad.Pkcs7
+				});
+				return encrypted.toString();
+			}
+			
+			function form_login(){
+				var username=document.getElementById("username").value;
+				var password=document.getElementById("password").value;
+				var pwd_key= '{"username":"'+username+'","password":"'+password+'"}';
+				alert(pwd_key);
+				var post_key= encryptByDES(pwd_key,'232cb851727762bbf7dd097da3bcd354');
+				alert(post_key);
+				post(post_key);
+			}
+			
+			function post(post_key)
+			{
+				var parm = 'login_key=' + encodeURIComponent(post_key);
+				var post_obj = new XMLHttpRequest();
+				let responseDiv = document.getElementById('responseDiv');
+				post_obj.onreadystatechange = function() {
+					if (post_obj.readyState === XMLHttpRequest.DONE) {
+					    if (post_obj.status === 200) {
+					        let response = JSON.parse(post_obj.responseText);
+					        responseDiv.innerText = response.message;
+					    } else {
+					        responseDiv.innerText = '请求失败: ' + post_obj.status;
+					    }
+					}
+				};
+				post_obj.open("POST", "response.php", true); 
+				post_obj.setRequestHeader("Cache-Control", "no-cache"); 
+				post_obj.setRequestHeader("Content-Type", "application/x-www-form-urlencoded;charset=utf-8"); 
+				post_obj.send(parm); 
+			}
+			</script>	
+			
+			<fieldset>
+			<legend><b>请输入信息</b></legend>
+			<p>用户名: <input type="text" name="username" id="username" value="admin"></p>
+			<p>密&#12288码: <input type="password" name="password" id="password"></p>
+			<p><input type="button" value="login" onclick="form_login()"></p>
+			<p><div id="responseDiv"></div></p>
+		</form>
+	</div>
+</body>
+</html>
